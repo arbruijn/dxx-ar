@@ -1415,7 +1415,7 @@ void hud_show_lives()
 void show_final_target_shields() {
 	fix shields = Newdemo_state > ND_STATE_RECORDING ?
 		Newdemo_final_target_shields :
-		Final_target_object_num == -1 ? -1 :
+		Final_target_object_num == -1 || Objects[Final_target_object_num].type != OBJ_ROBOT ? -1 :
 		Objects[Final_target_object_num].shields;
 	if (shields < 0 || !Final_target_strength)
 		return;
@@ -1425,10 +1425,16 @@ void show_final_target_shields() {
 	int x = PlayerCfg.CockpitMode[1] == CM_FULL_COCKPIT ? FSPACX(12) : FSPACX(1);
 	int y = PlayerCfg.CockpitMode[1] == CM_FULL_COCKPIT ? FSPACY(12) :
 		PlayerCfg.CockpitMode[1] == CM_STATUS_BAR ? FSPACY(1) : FSPACY(24);
+	/*
 	gr_setcolor(BM_XRGB(5,0,0));
 	gr_rect(x,y,x+FSPACX(32),y+FSPACY(4));
 	gr_setcolor(BM_XRGB(20,0,0));
 	gr_rect(x,y,x+FSPACX(width),y+FSPACY(4));
+	*/
+	gr_set_curfont(GAME_FONT);
+	gr_set_fontcolor(BM_XRGB(0,31,0),-1);
+
+	gr_printf(x, y, "Boss: %i", (shields + 32767) >> 16);
 }
 
 void sb_show_lives()

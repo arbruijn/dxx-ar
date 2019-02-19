@@ -1036,8 +1036,8 @@ void apply_damage_to_controlcen(object *controlcen, fix damage, short who)
 
 	if ( controlcen->shields >= 0 ) {
 		controlcen->shields -= damage;
-		if (Newdemo_state == ND_STATE_RECORDING)
-			newdemo_record_final_target_shields(controlcen->shields, Final_target_strength);
+		//if (Newdemo_state == ND_STATE_RECORDING)
+		//	newdemo_record_final_target_shields(controlcen->shields, Final_target_strength);
 	}
 
 	if ( (controlcen->shields < 0) && !(controlcen->flags&(OF_EXPLODING|OF_DESTROYED)) ) {
