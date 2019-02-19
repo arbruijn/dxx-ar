@@ -52,6 +52,8 @@ extern int Auto_demo;
 
 struct morph_data;
 
+extern fix Newdemo_final_target_shields;
+
 // Functions called during recording process...
 extern void newdemo_record_start_demo();
 extern void newdemo_record_start_frame(fix frame_time );
@@ -84,6 +86,8 @@ extern void newdemo_record_wall_set_tmap_num1(short seg,ubyte side,short cseg,ub
 extern void newdemo_record_wall_set_tmap_num2(short seg,ubyte side,short cseg,ubyte cside,short tmap);
 extern void newdemo_record_multi_cloak(int pnum);
 extern void newdemo_record_multi_decloak(int pnum);
+extern void newdemo_record_num_kills(int num_kills_level, int num_kills_total, int num_kills_level_spawn);
+extern void newdemo_record_final_target_shields(fix shields, fix strength);
 extern void newdemo_set_new_level(int level_num);
 extern void newdemo_record_restore_rearview(void);
 

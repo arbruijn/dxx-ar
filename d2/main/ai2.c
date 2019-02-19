@@ -1803,6 +1803,7 @@ int create_gated_robot( int segnum, int object_id, vms_vector *pos)
 
 	Players[Player_num].num_robots_level++;
 	Players[Player_num].num_robots_total++;
+	Players[Player_num].num_robots_level_spawn++;
 
 	return objp-Objects;
 }

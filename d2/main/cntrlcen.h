@@ -112,4 +112,7 @@ extern void control_center_triggers_read_n_swap(control_center_triggers *cct, in
 
 extern int control_center_triggers_write(control_center_triggers *cct, PHYSFS_file *fp);
 
+extern int Final_target_object_num;
+extern fix Final_target_strength;
+
 #endif /* _CNTRLCEN_H */

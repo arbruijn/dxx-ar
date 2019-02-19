@@ -57,6 +57,9 @@ int	Control_center_player_been_seen;
 int	Control_center_next_fire_time;
 int	Control_center_present;
 
+int	Final_target_object_num;
+fix	Final_target_strength;
+
 void do_countdown_frame();
 
 //	-----------------------------------------------------------------------------
@@ -264,6 +267,8 @@ void do_controlcen_destroyed_stuff(object *objp)
 		return;
 
 	Dead_controlcen_object_num = objp-Objects;
+
+	Final_target_object_num = -1;
 }
 
 fix64	Last_time_cc_vis_check = 0;
@@ -456,6 +461,7 @@ void init_controlcen_for_level(void)
 			Objects[cntrlcen_objnum].render_type = RT_NONE;
 			Control_center_present = 0;
 		}
+		Final_target_object_num = boss_objnum;
 	} else if (cntrlcen_objnum != -1) {
 		//	Compute all gun positions.
 		objp = &Objects[cntrlcen_objnum];
@@ -474,8 +480,9 @@ void init_controlcen_for_level(void)
 		else {
 			objp->shields = i2f(Reactor_strength);
 		}
-
-	}
+		Final_target_object_num = cntrlcen_objnum;
+	} else
+		Final_target_object_num = -1;
 
 	//	Say the control center has not yet been hit.
 	Control_center_been_hit = 0;
@@ -483,6 +490,9 @@ void init_controlcen_for_level(void)
 	Control_center_next_fire_time = 0;
 	
 	Dead_controlcen_object_num = -1;
+
+	Final_target_strength = Final_target_object_num == -1 ? 0 :
+		Objects[Final_target_object_num].shields;
 }
 
 void special_reactor_stuff(void)

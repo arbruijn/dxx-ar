@@ -26,6 +26,8 @@ COPYRIGHT 1993-1999 PARALLAX SOFTWARE CORPORATION.  ALL RIGHTS RESERVED.
 #define ET_MULTI_START  1   //first part of multi-part explosion
 #define ET_MULTI_SECOND 2   //second part of multi-part explosion
 
+#define ROBOT_DROP_MATCEN_NUM	-2
+
 // data for exploding walls (such as hostage door)
 typedef struct expl_wall {
 	int segnum,sidenum;

@@ -1034,8 +1034,11 @@ void apply_damage_to_controlcen(object *controlcen, fix damage, short who)
 		ai_do_cloak_stuff();
 	}
 
-	if ( controlcen->shields >= 0 )
+	if ( controlcen->shields >= 0 ) {
 		controlcen->shields -= damage;
+		if (Newdemo_state == ND_STATE_RECORDING)
+			newdemo_record_final_target_shields(controlcen->shields, Final_target_strength);
+	}
 
 	if ( (controlcen->shields < 0) && !(controlcen->flags&(OF_EXPLODING|OF_DESTROYED)) ) {
 
@@ -1296,7 +1299,10 @@ int apply_damage_to_robot(object *robot, fix damage, int killer_objnum)
 	robot->shields -= damage;
 
 	//	Do unspeakable hacks to make sure player doesn't die after killing boss.  Or before, sort of.
-	if (Robot_info[robot->id].boss_flag)
+	if (Robot_info[robot->id].boss_flag) {
+		if (Newdemo_state == ND_STATE_RECORDING)
+			newdemo_record_final_target_shields(robot->shields, Final_target_strength);
+		
 		if (PLAYING_BUILTIN_MISSION && Current_level_num == Last_level)
 			if (robot->shields < 0)
 			 {
@@ -1321,6 +1327,7 @@ int apply_damage_to_robot(object *robot, fix damage, int killer_objnum)
 						do_final_boss_hacks();
 				  }
 			  }
+	}
 
 	if (robot->shields < 0) {
 #ifdef NETWORK
@@ -1355,9 +1362,15 @@ int apply_damage_to_robot(object *robot, fix damage, int killer_objnum)
 
 		Players[Player_num].num_kills_level++;
 		Players[Player_num].num_kills_total++;
+		if (robot->matcen_creator) // spawned by matcen or dropped by robot?
+			Players[Player_num].num_kills_level_spawn++;
+		if (Newdemo_state == ND_STATE_RECORDING)
+			newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total,
+				Players[Player_num].num_kills_level_spawn);
 
 		if (Robot_info[robot->id].boss_flag) {
 			start_boss_death_sequence(robot);	//do_controlcen_destroyed_stuff(NULL);
+			Final_target_object_num = -1;
 		} else if (Robot_info[robot->id].death_roll) {
 			start_robot_death_sequence(robot);	//do_controlcen_destroyed_stuff(NULL);
 		} else {

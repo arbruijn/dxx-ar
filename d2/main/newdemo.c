@@ -140,6 +140,8 @@ extern void init_seismic_disturbances(void);
 #define ND_EVENT_SECRET_THINGY			48	// 0/1 = secret exit functional/non-functional
 #define ND_EVENT_LINK_SOUND_TO_OBJ		49	// record digi_link_sound_to_object3
 #define ND_EVENT_KILL_SOUND_TO_OBJ		50	// record digi_kill_sound_linked_to_object
+#define ND_EVENT_NUM_KILLS			51	// sized, with old level, old total, new level, new total
+#define ND_EVENT_FINAL_TARGET_SHIELDS		52	// sized, with old shields, new shields, old strength, new strength
 
 
 #define NORMAL_PLAYBACK 			0
@@ -149,6 +151,7 @@ extern void init_seismic_disturbances(void);
 
 #define DEMO_VERSION				15      // last D1 version was 13
 #define DEMO_GAME_TYPE				3       // 1 was shareware, 2 registered
+#define DEMO_HAS_SIZED				4	// added to game-type to indicate sized extensions
 
 #define DEMO_FILENAME				DEMO_DIR "tmpdemo.dem"
 
@@ -167,6 +170,7 @@ sbyte Newdemo_do_interpolate = 1;
 int Newdemo_num_written;
 ubyte DemoDoRight=0,DemoDoLeft=0;
 object DemoRightExtra,DemoLeftExtra;
+fix Newdemo_final_target_shields=-1;
 
 // local var used for swapping endian demos
 static int swap_endian = 0;
@@ -204,6 +208,11 @@ static int nd_record_v_weapon_num = -1;
 static fix nd_record_v_homing_distance = -1;
 static int nd_record_v_primary_ammo = -1;
 static int nd_record_v_secondary_ammo = -1;
+static int nd_record_v_num_kills_level = -1;
+static int nd_record_v_num_kills_total = -1;
+static int nd_record_v_num_kills_level_spawn = -1;
+static int nd_record_v_final_target_shields = -1;
+static int nd_record_v_final_target_strength = -1;
 
 void newdemo_record_oneframeevent_update();
 extern int digi_link_sound_to_object3( int org_soundnum, short objnum, int forever, fix max_volume, fix  max_distance, int loop_start, int loop_end );
@@ -847,7 +856,7 @@ void newdemo_record_start_demo()
 	stop_time();
 	nd_write_byte(ND_EVENT_START_DEMO);
 	nd_write_byte(DEMO_VERSION);
-	nd_write_byte(DEMO_GAME_TYPE);
+	nd_write_byte(DEMO_GAME_TYPE | DEMO_HAS_SIZED);
 	nd_write_fix(0); // NOTE: This is supposed to write GameTime (in fix). Since our GameTime64 is fix64 and the demos do not NEED this time actually, just write 0.
 
 #ifdef NETWORK
@@ -888,6 +897,11 @@ void newdemo_record_start_demo()
 	nd_record_v_homing_distance = -1;
 	nd_record_v_primary_ammo = -1;
 	nd_record_v_secondary_ammo = -1;
+	nd_record_v_num_kills_level = -1;
+	nd_record_v_num_kills_total = -1;
+	nd_record_v_num_kills_level_spawn = -1;
+	nd_record_v_final_target_shields = -1;
+	nd_record_v_final_target_strength = -1;
 
 	for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
 		nd_write_short((short)Players[Player_num].primary_ammo[i]);
@@ -912,6 +926,11 @@ void newdemo_record_start_demo()
 	nd_write_byte((sbyte)Secondary_weapon);
 	nd_record_v_start_frame = nd_record_v_frame_number = 0;
 	nd_record_v_juststarted=1;
+	newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total,
+		Players[Player_num].num_kills_level_spawn);
+	if (Final_target_object_num != -1)
+		newdemo_record_final_target_shields(Objects[Final_target_object_num].shields,
+			Final_target_strength);
 	newdemo_set_new_level(Current_level_num);
 	newdemo_record_oneframeevent_update();
 	start_time();
@@ -1453,6 +1472,43 @@ void newdemo_record_cloaking_wall(int front_wall_num, int back_wall_num, ubyte t
 	start_time();
 }
 
+void newdemo_record_num_kills(int num_kills_level, int num_kills_total, int num_kills_level_spawn)
+{
+	stop_time();
+	nd_write_byte(ND_EVENT_NUM_KILLS);
+	nd_write_short(6 * 4);
+	nd_write_int(nd_record_v_num_kills_level < 0 ? num_kills_level : nd_record_v_num_kills_level);
+	nd_write_int(nd_record_v_num_kills_total < 0 ? num_kills_total : nd_record_v_num_kills_total);
+	nd_write_int(num_kills_level);
+	nd_write_int(num_kills_total);
+	nd_record_v_num_kills_level = num_kills_level;
+	nd_record_v_num_kills_total = num_kills_total;
+
+	nd_write_int(nd_record_v_num_kills_level_spawn < 0 ? num_kills_level_spawn : nd_record_v_num_kills_level_spawn);
+	nd_write_int(num_kills_level_spawn);
+	nd_record_v_num_kills_level_spawn = num_kills_level_spawn;
+
+	start_time();
+}
+
+void newdemo_record_final_target_shields(fix shields, fix strength)
+{
+	if (nd_record_v_final_target_shields == shields &&
+		nd_record_v_final_target_strength == strength)
+		return;
+	stop_time();
+	nd_write_byte(ND_EVENT_FINAL_TARGET_SHIELDS);
+	nd_write_short(2 * 4);
+	nd_write_fix(nd_record_v_final_target_shields == -1 ? shields : nd_record_v_final_target_shields);
+	nd_write_fix(shields);
+	nd_write_fix(nd_record_v_final_target_strength == -1 ? strength : nd_record_v_final_target_strength);
+	nd_write_fix(strength);
+	nd_record_v_final_target_shields = shields;
+	nd_record_v_final_target_strength = strength;
+	start_time();
+}
+
+
 void newdemo_set_new_level(int level_num)
 {
 	int i;
@@ -1535,6 +1591,7 @@ int newdemo_read_demo_start(enum purpose_type purpose)
 	if (purpose == PURPOSE_REWRITE)
 		nd_write_byte(version);
 	nd_read_byte(&game_type);
+	game_type &= ~DEMO_HAS_SIZED; 
 	if (purpose == PURPOSE_REWRITE)
 		nd_write_byte(game_type);
 	if (game_type < DEMO_GAME_TYPE) {
@@ -2738,6 +2795,78 @@ int newdemo_read_frame_information(int rewrite)
 			break;
 		}
 
+		case ND_EVENT_NUM_KILLS: {
+			int old_level, old_total, new_level, new_total, old_spawn, new_spawn;
+			short size;
+
+			nd_read_short(&size);
+			nd_read_int(&old_level);
+			nd_read_int(&old_total);
+			nd_read_int(&new_level);
+			nd_read_int(&new_total);
+			if (size >= 6 * 4)
+			{
+				nd_read_int(&old_spawn);
+				nd_read_int(&new_spawn);
+			}
+			else
+			{
+				old_spawn = new_spawn = 0;
+			}
+			if (rewrite)
+			{
+				nd_write_short(size);
+				nd_write_int(old_level);
+				nd_write_int(old_total);
+				nd_write_int(new_level);
+				nd_write_int(new_total);
+				if (size >= 6 * 4)
+				{
+					nd_write_int(old_spawn);
+					nd_write_int(new_spawn);
+				}
+				break;
+			}
+			if ((Newdemo_vcr_state == ND_STATE_REWINDING) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEBACKWARD)) {
+				Players[Player_num].num_kills_level = old_level;
+				Players[Player_num].num_kills_total = old_total;
+				Players[Player_num].num_kills_level_spawn = old_spawn;
+			} else if ((Newdemo_vcr_state == ND_STATE_PLAYBACK) || (Newdemo_vcr_state == ND_STATE_FASTFORWARD) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEFORWARD)) {
+				Players[Player_num].num_kills_level = new_level;
+				Players[Player_num].num_kills_total = new_total;
+				Players[Player_num].num_kills_level_spawn = new_spawn;
+			}
+			break;
+		}
+
+		case ND_EVENT_FINAL_TARGET_SHIELDS: {
+			fix old_shields, new_shields, old_strength, new_strength;
+			short size;
+
+			nd_read_short(&size);
+			nd_read_fix(&old_shields);
+			nd_read_fix(&new_shields);
+			nd_read_fix(&old_strength);
+			nd_read_fix(&new_strength);
+			if (rewrite)
+			{
+				nd_write_short(4 * 4);
+				nd_write_fix(old_shields);
+				nd_write_fix(new_shields);
+				nd_write_fix(old_strength);
+				nd_write_fix(new_strength);
+				break;
+			}
+			if ((Newdemo_vcr_state == ND_STATE_REWINDING) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEBACKWARD)) {
+				Newdemo_final_target_shields = old_shields;
+				Final_target_strength = old_strength;
+			} else if ((Newdemo_vcr_state == ND_STATE_PLAYBACK) || (Newdemo_vcr_state == ND_STATE_FASTFORWARD) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEFORWARD)) {
+				Newdemo_final_target_shields = new_shields;
+				Final_target_strength = new_strength;
+			}
+			break;
+		}
+
 		case ND_EVENT_NEW_LEVEL: {
 			sbyte new_level, old_level, loaded_level;
 
@@ -2841,8 +2970,14 @@ int newdemo_read_frame_information(int rewrite)
 			break;
 		}
 
-		default:
+		default: {
+			short size;
+			sbyte x;
+			nd_read_short(&size);
+			while (size--)
+				nd_read_byte(&x);
 			Int3();
+		}
 		}
 	}
 
@@ -3594,6 +3729,8 @@ void newdemo_start_playback(char * filename)
 	nd_playback_v_dead = nd_playback_v_rear = nd_playback_v_guided = 0;
 	PlayerCfg.Cockpit3DView[0] = PlayerCfg.Cockpit3DView[1] = CV_NONE;       //turn off 3d views on cockpit
 	DemoDoLeft = DemoDoRight = 0;
+	Newdemo_final_target_shields = -1;
+	Final_target_strength = 0;
 	HUD_clear_messages();
 	if (!Game_wind)
 		hide_menus();

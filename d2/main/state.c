@@ -1238,6 +1238,7 @@ int state_restore_all_sub(char *filename, int secret_restore)
 	fix64	old_gametime = GameTime64;
 	short TempTmapNum[MAX_SEGMENTS][MAX_SIDES_PER_SEGMENT];
 	short TempTmapNum2[MAX_SEGMENTS][MAX_SIDES_PER_SEGMENT];
+	int orig_robot_count = 0;
 
 	#ifndef NDEBUG
 	if (GameArg.SysUsePlayersDir && strncmp(filename, "Players/", 8))
@@ -1339,6 +1340,7 @@ int state_restore_all_sub(char *filename, int secret_restore)
 
 	{
 		StartNewLevelSub(current_level, 1, secret_restore);
+		orig_robot_count = count_number_of_robots();
 
 		if (secret_restore) {
 			player	dummy_player;
@@ -1715,6 +1717,27 @@ int state_restore_all_sub(char *filename, int secret_restore)
 		if (!window_is_visible(Game_wind))
 			window_set_visible(Game_wind, 1);
 	reset_time();
+
+	// infer spawned robot kills
+	int cur_robot_spawn_count = 0, cur_robot_count = 0;
+	for (i = 0; i <= Highest_object_index; i++)
+		if (Objects[i].type == OBJ_ROBOT &&
+			!(Objects[i].flags & (OF_EXPLODING | OF_SHOULD_BE_DEAD | OF_DESTROYED))) {
+			if (Objects[i].matcen_creator)
+				cur_robot_spawn_count++;
+			cur_robot_count++;
+		}
+	int non_spawn_kills = orig_robot_count - (cur_robot_count - cur_robot_spawn_count);
+	Players[Player_num].num_kills_level_spawn = Players[Player_num].num_kills_level - non_spawn_kills;
+	Players[Player_num].num_robots_level_spawn = Players[Player_num].num_kills_level_spawn + cur_robot_spawn_count;
+
+	// controlcen / boss already dead?
+	if (Final_target_object_num != -1 &&
+		((Objects[Final_target_object_num].type != OBJ_ROBOT &&
+			Objects[Final_target_object_num].type != OBJ_CNTRLCEN) ||
+			(Objects[Final_target_object_num].flags &
+				(OF_EXPLODING | OF_SHOULD_BE_DEAD | OF_DESTROYED))))
+		Final_target_object_num = -1;
 
 	return 1;
 }

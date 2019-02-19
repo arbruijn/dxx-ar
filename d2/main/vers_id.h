@@ -9,9 +9,10 @@
 #define D2XMAJOR __stringize(DXX_VERSION_MAJORi)
 #define D2XMINOR __stringize(DXX_VERSION_MINORi)
 #define D2XMICRO __stringize(DXX_VERSION_MICROi)
+#define D2XREVISION "-ar1"
 
 #define BASED_VERSION "Full Version v1.2"
-#define VERSION D2XMAJOR "." D2XMINOR "." D2XMICRO
+#define VERSION D2XMAJOR "." D2XMINOR "." D2XMICRO D2XREVISION
 #define DESCENT_VERSION g_descent_version
 
 extern const char g_descent_version[40];
