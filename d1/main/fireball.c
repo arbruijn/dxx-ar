@@ -817,6 +817,8 @@ int drop_powerup(int type, int id, int num, vms_vector *init_vel, vms_vector *po
 				obj->ctype.ai_info.CURRENT_STATE = AIS_LOCK;
 				obj->ctype.ai_info.GOAL_STATE = AIS_LOCK;
 				obj->ctype.ai_info.REMOTE_OWNER = -1;
+
+				obj->matcen_creator = ROBOT_DROP_MATCEN_NUM;
 			}
 
 			break;

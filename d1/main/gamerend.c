@@ -123,7 +123,9 @@ void show_robot_kills()
 	gr_set_curfont(GAME_FONT);
 	gr_set_fontcolor(BM_XRGB(0,31,0),-1);
 
-	gr_printf(FSPACX(1),lower_text_y_pos(),"Kills: %i",Players[Player_num].num_kills_level);
+	gr_printf(FSPACX(1),lower_text_y_pos(),"Kills: %i+%i",
+		Players[Player_num].num_kills_level - Players[Player_num].num_kills_level_spawn,
+		Players[Player_num].num_kills_level_spawn);
 }
 
 #ifdef NETWORK

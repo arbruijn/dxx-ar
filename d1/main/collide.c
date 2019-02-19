@@ -864,8 +864,11 @@ int apply_damage_to_robot(object *robot, fix damage, int killer_objnum)
 
 		Players[Player_num].num_kills_level++;
 		Players[Player_num].num_kills_total++;
+		if (robot->matcen_creator) // spawned by matcen or dropped by robot?
+			Players[Player_num].num_kills_level_spawn++;
 		if (Newdemo_state == ND_STATE_RECORDING)
-			newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total);
+			newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total,
+				Players[Player_num].num_kills_level_spawn);
 
 		if (Robot_info[robot->id].boss_flag) {
 			start_boss_death_sequence(robot);	//do_controlcen_destroyed_stuff(NULL);

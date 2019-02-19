@@ -108,6 +108,8 @@ typedef struct player {
 	fix     homing_object_dist;     // Distance of nearest homing object.
 	sbyte   hours_level;            // Hours played (since time_total can only go up to 9 hours)
 	sbyte   hours_total;            // Hours played (since time_total can only go up to 9 hours)
+	short   num_kills_level_spawn;  // Number of kills this level of spawned robots
+	short   num_robots_level_spawn; // Number of spawned robots this level
 } __pack__ player;
 
 // Same as above but structure how Savegames expect

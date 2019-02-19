@@ -1218,6 +1218,8 @@ int state_restore_all_sub(char *filename)
 //Read player info
 
 	StartNewLevelSub(current_level, 1, 0);//use page_in_textures here to fix OGL texture precashing crash -MPM
+	int orig_robot_count = count_number_of_robots();
+
 	MALLOC(pl_rw, player_rw, 1);
 	PHYSFS_read(fp, pl_rw, sizeof(player_rw), 1);
 	player_rw_swap(pl_rw, swap);
@@ -1488,6 +1490,18 @@ RetryObjectLoading:
 		if (!window_is_visible(Game_wind))
 			window_set_visible(Game_wind, 1);
 	reset_time();
+
+	// infer spawned robot kills
+	int cur_robot_spawn_count = 0, cur_robot_count = 0;
+	for (i = 0; i <= Highest_object_index; i++)
+		if (Objects[i].type == OBJ_ROBOT && !(Objects[i].flags & (OF_EXPLODING | OF_SHOULD_BE_DEAD))) {
+			if (Objects[i].matcen_creator)
+				cur_robot_spawn_count++;
+			cur_robot_count++;
+		}
+	int non_spawn_kills = orig_robot_count - (cur_robot_count - cur_robot_spawn_count);
+	Players[Player_num].num_kills_level_spawn = Players[Player_num].num_kills_level - non_spawn_kills;
+	Players[Player_num].num_robots_level_spawn = Players[Player_num].num_kills_level_spawn + cur_robot_spawn_count;
 
 	return 1;
 }

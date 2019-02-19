@@ -255,6 +255,7 @@ void init_player_stats_game(ubyte pnum)
 	Players[pnum].net_kills_total = 0;
 	Players[pnum].num_kills_level = 0;
 	Players[pnum].num_kills_total = 0;
+	Players[pnum].num_kills_level_spawn = 0;
 	Players[pnum].num_robots_level = 0;
 	Players[pnum].num_robots_total = 0;
 	Players[pnum].KillGoalCount = 0;
@@ -306,11 +307,14 @@ void init_player_stats_level(int secret_flag)
 	Players[Player_num].killer_objnum = -1;
 
 	Players[Player_num].num_kills_level = 0;
+	Players[Player_num].num_kills_level_spawn = 0;
 	if (Newdemo_state == ND_STATE_RECORDING)
-		newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total);
+		newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total,
+			Players[Player_num].num_kills_level_spawn);
 
 	Players[Player_num].num_robots_level = count_number_of_robots();
 	Players[Player_num].num_robots_total += Players[Player_num].num_robots_level;
+	Players[Player_num].num_robots_level_spawn = 0;
 
 	Players[Player_num].hostages_level = count_number_of_hostages();
 	Players[Player_num].hostages_total += Players[Player_num].hostages_level;

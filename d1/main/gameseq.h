@@ -112,4 +112,6 @@ extern int NumNetPlayerPositions;
 
 void bash_to_shield(int, char *);
 
+int count_number_of_robots(void);
+
 #endif /* _GAMESEQ_H */

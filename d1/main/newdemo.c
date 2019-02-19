@@ -192,6 +192,7 @@ static int nd_record_v_primary_ammo = -1;
 static int nd_record_v_secondary_ammo = -1;
 static int nd_record_v_num_kills_level = -1;
 static int nd_record_v_num_kills_total = -1;
+static int nd_record_v_num_kills_level_spawn = -1;
 
 void newdemo_record_oneframeevent_update(int wallupdate);
 extern int digi_link_sound_to_object3( int org_soundnum, short objnum, int forever, fix max_volume, fix  max_distance, int loop_start, int loop_end );
@@ -890,7 +891,8 @@ void newdemo_record_start_demo()
 	nd_write_byte((sbyte)Primary_weapon);
 	nd_write_byte((sbyte)Secondary_weapon);
 	nd_record_v_start_frame = nd_record_v_frame_number = 0;
-	newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total);
+	newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total,
+		Players[Player_num].num_kills_level_spawn);
 	newdemo_set_new_level(Current_level_num);
 	newdemo_record_oneframeevent_update(1);
 	start_time();
@@ -1329,17 +1331,22 @@ void newdemo_record_laser_level(sbyte old_level, sbyte new_level)
 	start_time();
 }
 
-void newdemo_record_num_kills(int num_kills_level, int num_kills_total)
+void newdemo_record_num_kills(int num_kills_level, int num_kills_total, int num_kills_level_spawn)
 {
 	stop_time();
 	nd_write_byte(ND_EVENT_NUM_KILLS);
-	nd_write_short(4 * 4);
+	nd_write_short(6 * 4);
 	nd_write_int(nd_record_v_num_kills_level < 0 ? num_kills_level : nd_record_v_num_kills_level);
 	nd_write_int(nd_record_v_num_kills_total < 0 ? num_kills_total : nd_record_v_num_kills_total);
 	nd_write_int(num_kills_level);
 	nd_write_int(num_kills_total);
 	nd_record_v_num_kills_level = num_kills_level;
 	nd_record_v_num_kills_total = num_kills_total;
+
+	nd_write_int(nd_record_v_num_kills_level_spawn < 0 ? num_kills_level_spawn : nd_record_v_num_kills_level_spawn);
+	nd_write_int(num_kills_level_spawn);
+	nd_record_v_num_kills_level_spawn = num_kills_level_spawn;
+
 	start_time();
 }
 
@@ -2563,7 +2570,7 @@ int newdemo_read_frame_information(int rewrite)
 		}
 
 		case ND_EVENT_NUM_KILLS: {
-			int old_level, old_total, new_level, new_total;
+			int old_level, old_total, new_level, new_total, old_spawn, new_spawn;
 			short size;
 
 			nd_read_short(&size);
@@ -2571,6 +2578,15 @@ int newdemo_read_frame_information(int rewrite)
 			nd_read_int(&old_total);
 			nd_read_int(&new_level);
 			nd_read_int(&new_total);
+			if (size >= 6 * 4)
+			{
+				nd_read_int(&old_spawn);
+				nd_read_int(&new_spawn);
+			}
+			else
+			{
+				old_spawn = new_spawn = 0;
+			}
 			if (rewrite)
 			{
 				nd_write_short(size);
@@ -2578,14 +2594,21 @@ int newdemo_read_frame_information(int rewrite)
 				nd_write_int(old_total);
 				nd_write_int(new_level);
 				nd_write_int(new_total);
+				if (size >= 6 * 4)
+				{
+					nd_write_int(old_spawn);
+					nd_write_int(new_spawn);
+				}
 				break;
 			}
 			if ((Newdemo_vcr_state == ND_STATE_REWINDING) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEBACKWARD)) {
 				Players[Player_num].num_kills_level = old_level;
 				Players[Player_num].num_kills_total = old_total;
+				Players[Player_num].num_kills_level_spawn = old_spawn;
 			} else if ((Newdemo_vcr_state == ND_STATE_PLAYBACK) || (Newdemo_vcr_state == ND_STATE_FASTFORWARD) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEFORWARD)) {
 				Players[Player_num].num_kills_level = new_level;
 				Players[Player_num].num_kills_total = new_total;
+				Players[Player_num].num_kills_level_spawn = new_spawn;
 			}
 			break;
 		}

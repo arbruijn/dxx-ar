@@ -300,6 +300,7 @@ object * create_morph_robot( segment *segp, vms_vector *object_pos, int object_i
 
 	Players[Player_num].num_robots_level++;
 	Players[Player_num].num_robots_total++;
+	Players[Player_num].num_robots_level_spawn++;
 
 	objnum = obj_create(OBJ_ROBOT, object_id, segp-Segments, object_pos,
 				&vmd_identity_matrix, Polygon_models[Robot_info[object_id].model_num].rad,

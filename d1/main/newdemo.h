@@ -91,7 +91,7 @@ extern void newdemo_record_primary_ammo(int new_ammo);
 extern void newdemo_record_secondary_ammo(int new_ammo);
 extern void newdemo_record_door_opening(int segnum, int side);
 extern void newdemo_record_laser_level(sbyte old_level, sbyte new_level);
-extern void newdemo_record_num_kills(int num_kills_level, int num_kills_total);
+extern void newdemo_record_num_kills(int num_kills_level, int num_kills_total, int num_kills_level_spawn);
 
 // Functions called during playback process...
 extern void newdemo_object_move_all();

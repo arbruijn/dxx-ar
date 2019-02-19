@@ -353,6 +353,7 @@ void verify_object( object * obj )	{
 //reads one object of the given version from the given file
 void read_object(object *obj,PHYSFS_file *f,int version)
 {
+	memset(obj, 0, sizeof(*obj));
 
 	obj->type           = PHYSFSX_readByte(f);
 	obj->id             = PHYSFSX_readByte(f);

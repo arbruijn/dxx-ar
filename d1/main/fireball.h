@@ -83,6 +83,8 @@ COPYRIGHT 1993-1998 PARALLAX SOFTWARE CORPORATION.  ALL RIGHTS RESERVED.
 #define ET_MULTI_START  1   //first part of multi-part explosion
 #define ET_MULTI_SECOND 2   //second part of multi-part explosion
 
+#define ROBOT_DROP_MATCEN_NUM	-2
+
 object *object_create_explosion(short segnum, vms_vector *position, fix size, int vclip_type);
 object *object_create_muzzle_flash(short segnum, vms_vector *position, fix size, int vclip_type);
 
