@@ -76,15 +76,8 @@ void game_draw_multi_message()
 }
 #endif
 
-void show_framerate()
-{
-	static int fps_count = 0, fps_rate = 0;
+static int lower_text_y_pos() {
 	int y = GHEIGHT;
-	static fix64 fps_time = 0;
-
-	gr_set_curfont(GAME_FONT);
-	gr_set_fontcolor(BM_XRGB(0,31,0),-1);
-
 	if (PlayerCfg.CockpitMode[1] == CM_FULL_SCREEN) {
 		if ((Game_mode & GM_MULTI) || (Newdemo_state == ND_STATE_PLAYBACK && Newdemo_game_mode & GM_MULTI))
 			y -= LINE_SPACING * 10;
@@ -101,6 +94,16 @@ void show_framerate()
 		else
 			y -= LINE_SPACING * 2;
 	}
+	return y;
+}
+
+void show_framerate()
+{
+	static int fps_count = 0, fps_rate = 0;
+	static fix64 fps_time = 0;
+
+	gr_set_curfont(GAME_FONT);
+	gr_set_fontcolor(BM_XRGB(0,31,0),-1);
 
 	fps_count++;
 	if (timer_query() >= fps_time + F1_0)
@@ -109,7 +112,18 @@ void show_framerate()
 		fps_count = 0;
 		fps_time = timer_query();
 	}
-	gr_printf(SWIDTH-(GameArg.SysMaxFPS>999?FSPACX(43):FSPACX(37)),y,"FPS: %i",fps_rate);
+	gr_printf(SWIDTH-(GameArg.SysMaxFPS>999?FSPACX(43):FSPACX(37)),lower_text_y_pos(),"FPS: %i",fps_rate);
+}
+
+void show_robot_kills()
+{
+	if ( ((Game_mode & GM_MULTI) && !(Game_mode & GM_MULTI_COOP)) )
+		return;
+
+	gr_set_curfont(GAME_FONT);
+	gr_set_fontcolor(BM_XRGB(0,31,0),-1);
+
+	gr_printf(FSPACX(1),lower_text_y_pos(),"Kills: %i",Players[Player_num].num_kills_level);
 }
 
 #ifdef NETWORK
@@ -330,6 +344,8 @@ void game_draw_hud_stuff()
 
 	if (GameCfg.FPSIndicator && PlayerCfg.CockpitMode[1] != CM_REAR_VIEW)
 		show_framerate();
+
+	show_robot_kills();
 
 	if (Newdemo_state == ND_STATE_PLAYBACK)
 		Game_mode = Newdemo_game_mode;
