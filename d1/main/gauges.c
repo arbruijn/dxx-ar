@@ -725,6 +725,13 @@ void hud_show_score()
 	gr_set_fontcolor(Color_0_31_0, -1);
 
 	gr_string(grd_curcanv->cv_bitmap.bm_w-w-FSPACX(1), FSPACY(1), score_str);
+
+	/*
+	if ( !((Game_mode & GM_MULTI) && !(Game_mode & GM_MULTI_COOP)) ) {
+		sprintf(score_str, "%s: %5d", "Kills", Players[Player_num].num_kills_level);
+		gr_string(grd_curcanv->cv_bitmap.bm_w-w-FSPACX(1), FSPACY(9), score_str);
+	}
+	*/
 }
 
 void hud_show_timer_count()

@@ -864,6 +864,8 @@ int apply_damage_to_robot(object *robot, fix damage, int killer_objnum)
 
 		Players[Player_num].num_kills_level++;
 		Players[Player_num].num_kills_total++;
+		if (Newdemo_state == ND_STATE_RECORDING)
+			newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total);
 
 		if (Robot_info[robot->id].boss_flag) {
 			start_boss_death_sequence(robot);	//do_controlcen_destroyed_stuff(NULL);

@@ -130,6 +130,7 @@ COPYRIGHT 1993-1998 PARALLAX SOFTWARE CORPORATION.  ALL RIGHTS RESERVED.
 #define ND_EVENT_LASER_LEVEL			42	// with old/new level
 #define ND_EVENT_LINK_SOUND_TO_OBJ		43	// record digi_link_sound_to_object3
 #define ND_EVENT_KILL_SOUND_TO_OBJ		44	// record digi_kill_sound_linked_to_object
+#define ND_EVENT_NUM_KILLS			45	// sized, with old level, old total, new level, new total
 
 #define NORMAL_PLAYBACK 			0
 #define SKIP_PLAYBACK				1
@@ -145,6 +146,7 @@ COPYRIGHT 1993-1998 PARALLAX SOFTWARE CORPORATION.  ALL RIGHTS RESERVED.
 
 #define DEMO_GAME_TYPE_SHAREWARE	1
 #define DEMO_GAME_TYPE				2
+#define DEMO_HAS_SIZED				4	// added to game-type to indicate sized extensions
 
 // In- and Out-files
 PHYSFS_file *infile;
@@ -188,6 +190,8 @@ static int nd_record_v_weapon_num = -1;
 static fix nd_record_v_homing_distance = -1;
 static int nd_record_v_primary_ammo = -1;
 static int nd_record_v_secondary_ammo = -1;
+static int nd_record_v_num_kills_level = -1;
+static int nd_record_v_num_kills_total = -1;
 
 void newdemo_record_oneframeevent_update(int wallupdate);
 extern int digi_link_sound_to_object3( int org_soundnum, short objnum, int forever, fix max_volume, fix  max_distance, int loop_start, int loop_end );
@@ -821,7 +825,7 @@ void newdemo_record_start_demo()
 	stop_time();
 	nd_write_byte(ND_EVENT_START_DEMO);
 	nd_write_byte(DEMO_VERSION);
-	nd_write_byte(DEMO_GAME_TYPE);
+	nd_write_byte(DEMO_GAME_TYPE | DEMO_HAS_SIZED);
 	nd_write_fix(0); // NOTE: This is supposed to write GameTime (in fix). Since our GameTime64 is fix64 and the demos do not NEED this time actually, just write 0.
 
 #ifdef NETWORK
@@ -862,6 +866,8 @@ void newdemo_record_start_demo()
 	nd_record_v_homing_distance = -1;
 	nd_record_v_primary_ammo = -1;
 	nd_record_v_secondary_ammo = -1;
+	nd_record_v_num_kills_level = -1;
+	nd_record_v_num_kills_total = -1;
 
 	for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
 		nd_write_short((short)Players[Player_num].primary_ammo[i]);
@@ -884,6 +890,7 @@ void newdemo_record_start_demo()
 	nd_write_byte((sbyte)Primary_weapon);
 	nd_write_byte((sbyte)Secondary_weapon);
 	nd_record_v_start_frame = nd_record_v_frame_number = 0;
+	newdemo_record_num_kills(Players[Player_num].num_kills_level, Players[Player_num].num_kills_total);
 	newdemo_set_new_level(Current_level_num);
 	newdemo_record_oneframeevent_update(1);
 	start_time();
@@ -1322,6 +1329,20 @@ void newdemo_record_laser_level(sbyte old_level, sbyte new_level)
 	start_time();
 }
 
+void newdemo_record_num_kills(int num_kills_level, int num_kills_total)
+{
+	stop_time();
+	nd_write_byte(ND_EVENT_NUM_KILLS);
+	nd_write_short(4 * 4);
+	nd_write_int(nd_record_v_num_kills_level < 0 ? num_kills_level : nd_record_v_num_kills_level);
+	nd_write_int(nd_record_v_num_kills_total < 0 ? num_kills_total : nd_record_v_num_kills_total);
+	nd_write_int(num_kills_level);
+	nd_write_int(num_kills_total);
+	nd_record_v_num_kills_level = num_kills_level;
+	nd_record_v_num_kills_total = num_kills_total;
+	start_time();
+}
+
 
 void newdemo_set_new_level(int level_num)
 {
@@ -1407,6 +1428,7 @@ int newdemo_read_demo_start(enum purpose_type purpose)
 		return 1;
 	}
 	nd_read_byte(&game_type);
+	game_type &= ~DEMO_HAS_SIZED; 
 	if (purpose == PURPOSE_REWRITE)
 		nd_write_byte(game_type);
 	if ((game_type == DEMO_GAME_TYPE_SHAREWARE) && shareware)
@@ -2540,6 +2562,34 @@ int newdemo_read_frame_information(int rewrite)
 			break;
 		}
 
+		case ND_EVENT_NUM_KILLS: {
+			int old_level, old_total, new_level, new_total;
+			short size;
+
+			nd_read_short(&size);
+			nd_read_int(&old_level);
+			nd_read_int(&old_total);
+			nd_read_int(&new_level);
+			nd_read_int(&new_total);
+			if (rewrite)
+			{
+				nd_write_short(size);
+				nd_write_int(old_level);
+				nd_write_int(old_total);
+				nd_write_int(new_level);
+				nd_write_int(new_total);
+				break;
+			}
+			if ((Newdemo_vcr_state == ND_STATE_REWINDING) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEBACKWARD)) {
+				Players[Player_num].num_kills_level = old_level;
+				Players[Player_num].num_kills_total = old_total;
+			} else if ((Newdemo_vcr_state == ND_STATE_PLAYBACK) || (Newdemo_vcr_state == ND_STATE_FASTFORWARD) || (Newdemo_vcr_state == ND_STATE_ONEFRAMEFORWARD)) {
+				Players[Player_num].num_kills_level = new_level;
+				Players[Player_num].num_kills_total = new_total;
+			}
+			break;
+		}
+
 		case ND_EVENT_NEW_LEVEL: {
 			sbyte new_level, old_level, loaded_level;
 
@@ -2595,8 +2645,14 @@ int newdemo_read_frame_information(int rewrite)
 			break;
 		}
 
-		default:
+		default: {
+			short size;
+			sbyte x;
+			nd_read_short(&size);
+			while (size--)
+				nd_read_byte(&x);
 			Int3();
+		}
 		}
 	}
 
