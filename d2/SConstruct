@@ -173,7 +173,7 @@ class DXXCommon:
 
 	def check_platform(self):
 		# windows or *nix?
-		if sys.platform == 'win32':
+		if sys.platform == 'win32' or sys.platform == 'msys':
 			print "%s: compiling on Windows" % self.PROGRAM_NAME
 			platform = self.Win32PlatformSettings
 		elif sys.platform == 'darwin':
