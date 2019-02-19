@@ -63,6 +63,7 @@ static const char VSyncStr[] ="VSync";
 static const char MultisampleStr[] ="Multisample";
 static const char FPSIndicatorStr[] ="FPSIndicator";
 static const char GrabinputStr[] ="GrabInput";
+static const char SpeedrunIndicatorStr[] ="SpeedrunIndicator";
 
 int ReadConfigFile()
 {
@@ -111,6 +112,7 @@ int ReadConfigFile()
 	GameCfg.Multisample = 0;
 	GameCfg.FPSIndicator = 0;
 	GameCfg.Grabinput = 1;
+	GameCfg.SpeedrunIndicator = 0;
 
 	infile = PHYSFSX_openReadBuffered("descent.cfg");
 
@@ -220,6 +222,8 @@ int ReadConfigFile()
 				GameCfg.FPSIndicator = strtol(value, NULL, 10);
 			else if (!strcmp(token, GrabinputStr))
 				GameCfg.Grabinput = strtol(value, NULL, 10);
+			else if (!strcmp(token, SpeedrunIndicatorStr))
+				GameCfg.SpeedrunIndicator = strtol(value, NULL, 10);
 		}
 		d_free(line);
 	}
@@ -274,6 +278,7 @@ int WriteConfigFile()
 	PHYSFSX_printf(infile, "%s=%i\n", MultisampleStr, GameCfg.Multisample);
 	PHYSFSX_printf(infile, "%s=%i\n", FPSIndicatorStr, GameCfg.FPSIndicator);
 	PHYSFSX_printf(infile, "%s=%i\n", GrabinputStr, GameCfg.Grabinput);
+	PHYSFSX_printf(infile, "%s=%i\n", SpeedrunIndicatorStr, GameCfg.SpeedrunIndicator);
 
 	PHYSFS_close(infile);
 

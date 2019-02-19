@@ -347,7 +347,8 @@ void game_draw_hud_stuff()
 	if (GameCfg.FPSIndicator && PlayerCfg.CockpitMode[1] != CM_REAR_VIEW)
 		show_framerate();
 
-	show_robot_kills();
+	if (GameCfg.SpeedrunIndicator)
+		show_robot_kills();
 
 	if (Newdemo_state == ND_STATE_PLAYBACK)
 		Game_mode = Newdemo_game_mode;
