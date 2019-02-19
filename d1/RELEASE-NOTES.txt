@@ -1,5 +1,20 @@
-RELEASE NOTES
-=============
+Patches by Arne de Bruijn
+=========================
+
+* 0.58.1-ar4 2019-02-19
+  add Speedrun Indicator option to Graphics options to enable/disable kills indicator
+
+* 0.58.1-ar3 2018-12-24
+  split robot kills in original and spawned
+
+* 0.58.1-ar2 2018-12-22
+  store robot kills indicator in demo file
+
+* 0.58.1-ar1 2018-12-18
+  show robot kills indicator
+
+Original D1X-Rebirth release notes
+==================================
 
 What's new in 0.58.1
 --------------------
